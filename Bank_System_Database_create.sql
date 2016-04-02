@@ -1,10 +1,14 @@
 -- Created by Nikita
 
+
+
 -- tables
 -- Table: BANK_ACCOUNTS
 CREATE TABLE BANK_ACCOUNTS (
     account_number integer  NOT NULL   PRIMARY KEY  AUTOINCREMENT,
     BANK_CLIENTS_id integer  NOT NULL,
+    type text  NOT NULL,
+    balance real  NOT NULL,
     FOREIGN KEY (BANK_CLIENTS_id) REFERENCES BANK_CLIENTS (id)
 );
 
@@ -28,6 +32,10 @@ CREATE TABLE BANK_USERS (
     password text  NOT NULL,
     user_type text  NOT NULL
 );
+
+
+
+
 
 -- End of file.
 
