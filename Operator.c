@@ -1,5 +1,6 @@
 #include "Operator.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sqlite3.h>
 
@@ -80,6 +81,65 @@ void transfer(sqlite3 * db, char* sql, char* zErrMsg, int firstUser, int secondU
 	balanceChange(db, sql, zErrMsg, secondUser, moneyTransfer);
 }
 
+int checkPassword(sqlite3 * db, char* sql, char* zErrMsg, char *username, char *password)
+{
+	int rc;
+	sqlite3_stmt *res;
+
+	char str[300];
+	sprintf(str, "SELECT password FROM BANK_USERS WHERE username = \"%s\";", username);
+
+	rc = sqlite3_prepare_v2(db, str, -1, &res, 0);
+    
+    if (rc == SQLITE_OK) {       
+        sqlite3_bind_int(res, 1, 3);
+    } else {
+        
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+    }
+    
+    int step = sqlite3_step(res);
+ 
+    if (step == SQLITE_ROW) {
+    	if(!strcmp(password, sqlite3_column_text(res, 0)))
+    		return 1;
+    	else
+    		return 0;
+    }
+    sqlite3_finalize(res);
+}
+
+
+int authentication(sqlite3 * db, char* sql, char* zErrMsg, char *username, char *password)
+{
+	int rc;
+	sqlite3_stmt *res;
+
+	char str[300];
+	sprintf(str, "SELECT username FROM BANK_USERS WHERE username = \"%s\";", username);
+
+	rc = sqlite3_prepare_v2(db, str, -1, &res, 0);
+    
+    if (rc == SQLITE_OK) {       
+        sqlite3_bind_int(res, 1, 3);
+    } else {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+    }
+    
+    int step = sqlite3_step(res);
+ 
+    if (step == SQLITE_ROW)
+    {
+		return checkPassword(db, sql, zErrMsg, username, password);
+    }
+    else
+    {
+    	return 0; 
+    }
+
+    sqlite3_finalize(res);
+}
+
 int main(int argc, const char *argv[])
 {
 	sqlite3 *db;
@@ -92,7 +152,13 @@ int main(int argc, const char *argv[])
 	int rc = 0;
 	char* sql;
 
-	debit(db, sql, zErrMsg, 0, 50);
-	credit(db, sql, zErrMsg, 0, 50);
-	transfer(db, sql, zErrMsg, 0, 1, 50);
+	// debit(db, sql, zErrMsg, 0, 50);
+	// credit(db, sql, zErrMsg, 0, 50);
+	// transfer(db, sql, zErrMsg, 0, 1, 50);
+	if(authentication(db, sql, zErrMsg, "Venskiy", "1234"))
+		printf("success\n");
+	else
+		printf("fail\n");
+
+	sqlite3_close(db);
 }
