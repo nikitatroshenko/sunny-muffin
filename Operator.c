@@ -19,7 +19,7 @@ void balanceChange(sqlite3 * db, char* zErrMsg, int accountNumber, int money)
 	sqlite3_stmt *res;
 
 	char str[300];
-	sprintf(str, "SELECT balance FROM BANK_ACCOUNTS WHERE account_number = %d", accountNumber);
+	sprintf(str, "SELECT balance FROM BANK_ACCOUNTS WHERE account_number = %d;", accountNumber);
 
 	rc = sqlite3_prepare_v2(db, str, -1, &res, 0);
 
