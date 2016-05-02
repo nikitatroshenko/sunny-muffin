@@ -17,5 +17,5 @@ For each class type there is a `Class_t` variable that contains static methods a
 You can initialize variables of some class with instance of derived class:
 `user *usr = Admin.alloc();`
 
-You can use `instanceOf(bsObject *, Class_t)` (`#include "object.h"`) function to know whether instance is a kind of a class.
+You can use `instanceOf(bsObject *, Class_t)` (`#include "object.h"`) function to know whether instance is a kind of a particular class.
 
