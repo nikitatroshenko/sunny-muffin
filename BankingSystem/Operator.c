@@ -6,17 +6,17 @@ typedef struct {
 } operator_private;
 
 void *Operator_alloc();
-void Operator_init(operator *self, bs_c_string z_username);
-void Operator_release(operator *self);
-Class_t Operator_get_class(operator *self);
+void Operator_init(struct operator *self, bs_c_string z_username);
+void Operator_release(struct operator *self);
+Class_t Operator_get_class(struct operator *self);
 
-boolean Operator_authorize(operator *self, bs_c_string z_password);
-bs_c_string Operator_get_username(operator *self);
-boolean Operator_is_authorized(operator *self);
+boolean Operator_authorize(struct operator *self, bs_c_string z_password);
+bs_c_string Operator_get_username(struct operator *self);
+boolean Operator_is_authorized(struct operator *self);
 
-int Operator_debit(operator *self, const account *p_account, int sum);
-int Operator_credit(operator *self, const account *p_account, int sum);
-int Operator_transfer(operator *self, const account *p_account, int sum);
+int Operator_debit(struct operator *self, struct account *p_account, int sum);
+int Operator_credit(struct operator *self, struct account *p_account, int sum);
+int Operator_transfer(struct operator *self, struct account *p_account, int sum);
 
 const Class_t Operator = {
 	.alloc = Operator_alloc,
@@ -25,7 +25,7 @@ const Class_t Operator = {
 };
 
 void * Operator_alloc() {
-	operator *self = bs_calloc(1, sizeof(operator));
+	struct operator *self = bs_calloc(1, sizeof(operator));
 
 	self->private = bs_calloc(1, sizeof(operator_private));
 	self->init = Operator_init;
@@ -39,43 +39,67 @@ void * Operator_alloc() {
 	self->debit = Operator_debit;
 	self->credit = Operator_credit;
 	self->transfer = Operator_transfer;
+
+	return self;
 }
 
-void Operator_init(operator *self, const char *z_username) {
-	operator_private *self_private = self->private;
+#define self_private ((operator_private *)self->private)
 
+void Operator_init(struct operator *self, const char *z_username) {
 	self_private->super = User.alloc();
 	self_private->super->init(self_private->super, z_username);
 }
 
-void Operator_release(operator *self) {
-	user *super = ((operator_private *)self->private)->super;
+void Operator_release(struct operator *self) {
+	user *super = self_private->super;
 
 	super->release(super);
+	bs_free(self->private);
 	bs_free(self);
 }
 
-Class_t Operator_get_class(operator *self) {
+Class_t Operator_get_class(struct operator *self) {
 	return Operator;
 }
 
-int Operator_debit(operator *self, const account *p_account, int sum) {
+boolean Operator_authorize(struct operator *self, bs_c_string z_password) {
+	return NO;
+}
+
+bs_c_string Operator_get_username(struct operator *self) {
+	return self_private->super->getUsername(self_private->super);
+}
+
+boolean Operator_is_authorized(struct operator *self) {
+	return self_private->super->isAuthorized(self_private->super);
+}
+
+int Operator_debit(struct operator *self, struct account *p_account, int sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
+#if DEBUG
+	LOG("Debit\n");
+#endif // DEBUG
 
 	return 0;
 }
 
-int Operator_credit(operator *self, const account *p_account, int sum) {
+int Operator_credit(struct operator *self, struct account *p_account, int sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
+#if DEBUG
+	LOG("Credit\n");
+#endif // DEBUG
 
 	return 0;
 }
 
-int Operator_transfer(operator *self, const account *p_account, int sum) {
+int Operator_transfer(struct operator *self, struct account *p_account, int sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
+#if DEBUG
+	LOG("Transfer\n");
+#endif // DEBUG
 
 	return 0;
 }

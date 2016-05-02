@@ -1,8 +1,10 @@
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
 
+#include "stddefs.h"
 #include "BSObject.h"
-#include "Account.h"
+
+typedef struct account account;
 
 typedef struct {
 	void *private;
@@ -11,17 +13,11 @@ typedef struct {
 	Class_t *(*getClass)(void *self);
 
 	// Client methods
-	const char *(*getName)(void *self);
-	const int(*getId)(void *self);
+	bs_c_string(*getName)(void *self);
+	int(*getId)(void *self);
 	account * const(*getAccounts)(void *self);
 } client;
 
-typedef struct {
-	void *(*alloc)();
-	Class_t *class;
-	Class_t *super;
-} Client_type;
-
-extern const Client_type Client;
+extern const Class_t Client;
 
 #endif // !_CLIENT_H_

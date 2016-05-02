@@ -10,6 +10,14 @@ typedef int boolean;
 #define YES 1
 #define NO 0
 
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#define LOG(x) fprintf(stderr, "%s\n", #x)
+#else
+#define LOG(x)
+#endif
+
 boolean bs_memory_equals(const void *buf1, const void *buf2, size_t size);
 
 void *bs_memory_copy(void *dest_buf, const void *src_buf, size_t count, size_t size);

@@ -2,12 +2,13 @@
 #define _USER_H_
 
 #include "stddefs.h"
+#include "BSObject.h"
 
 typedef struct {
 	void *private;
 	void(*release)(void *self);
 	void(*init)(void *self, ...);
-	Class_t *(*getClass)(void *self);
+	Class_t(*getClass)(void *self);
 
 	// User methods.
 	boolean(*authorize)(void *self, const char *z_password);
