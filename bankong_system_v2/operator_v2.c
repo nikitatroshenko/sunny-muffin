@@ -24,6 +24,7 @@ struct operator_v2_private {
 	boolean is_dynamic;
 };
 
+// These macros are used for quick access to superclass and private fields corresponsively.
 #define super ((struct user_v2 *)self)
 #define __ ((struct operator_v2_private *)self->vars.private)->
 
@@ -63,12 +64,15 @@ void Operator_release(struct operator_v2 *self) {
 	if (is_dynamic) bs_free(self);
 }
 
+// _In_out_ params for callback function.
 struct fetch_account_details_params {
 	bs_const_string client_id;
 	double balance;
 	boolean result;
 };
 
+// If this callback is invoked, then it checks client id to be equal to account's owner. If params->result if false,
+// then function returns nonzero, which will occur into SQLITE_ABORT error.
 int fetch_account_details(
 	struct fetch_account_details_params *params,
 	int n_cols,
@@ -80,6 +84,7 @@ int fetch_account_details(
 	return !params->result; // That means we've found the account but client is not its owner, so return value is nonzero.
 }
 
+// Decreases specified account balance with specified sum. Client id is used to make sure operation is legal.
 int Operator_debit(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum) {
 	ASSERT(self != Nil);
 	sqlite3 *db = system_get_database_handler(property_get((struct bs_object_v2 *) self, system));
@@ -124,6 +129,7 @@ int Operator_debit(struct operator_v2 *self, bs_const_string client_id, int acco
 	return 0;
 }
 
+// Increases specified account balance with specified sum. Client id is used to make sure operation is legal.
 int Operator_credit(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
@@ -133,6 +139,7 @@ int Operator_credit(struct operator_v2 *self, bs_const_string client_id, int acc
 	return 0;
 }
 
+// Transfers sum from one specified account to another. Client id is used to make sure operation is legal.
 int Operator_transfer(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
