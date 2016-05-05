@@ -9,11 +9,11 @@ void * Admin_static_alloc(struct admin_v2 *self);
 void Admin_release(struct admin_v2 *self);
 
 int Admin_add_client(struct admin_v2 *self, struct client_v2 *p_client);
-int Admin_remove_client(struct admin_v2 *self, bs_const_string client_id);
-int Admin_update_client_info(struct admin_v2 *self, bs_const_string client_id, struct client_v2 *p_new_client);
-int Admin_create_account(struct admin_v2 *self, bs_const_string client_id, enum AccountType account_type);
-int Admin_change_account_type(struct admin_v2 *self, bs_const_string client_id, int account_id, enum AccountType account_type);
-int Admin_close_account(struct admin_v2 *self, bs_const_string client_id, int account_id);
+int Admin_remove_client(struct admin_v2 *self, const char * client_id);
+int Admin_update_client_info(struct admin_v2 *self, const char * client_id, struct client_v2 *p_new_client);
+int Admin_create_account(struct admin_v2 *self, const char * client_id, enum AccountType account_type);
+int Admin_change_account_type(struct admin_v2 *self, const char * client_id, int account_id, enum AccountType account_type);
+int Admin_close_account(struct admin_v2 *self, const char * client_id, int account_id);
 
 struct bs_class_struct_v2 Admin_v2 = {
 	.alloc = Admin_alloc,
@@ -89,7 +89,7 @@ int Admin_add_client(struct admin_v2 *self, struct client_v2 *p_client) {
 }
 
 struct validate_client_id_callback_params {
-	bs_const_string client_id;
+	const char * client_id;
 	boolean result;
 };
 
@@ -103,7 +103,7 @@ int validate_client_id_callback(
 	return !params->result;
 }
 
-int Admin_close_account(struct admin_v2 *self, bs_const_string client_id, int account_id) {
+int Admin_close_account(struct admin_v2 *self, const char * client_id, int account_id) {
 	sqlite3 *db = system_get_database_handler(property_get((struct bs_object_v2 *)self, system));
 	struct validate_client_id_callback_params params = {
 		.client_id = client_id,
@@ -128,7 +128,7 @@ int Admin_close_account(struct admin_v2 *self, bs_const_string client_id, int ac
 	return 0;
 }
 
-int Admin_remove_client(struct admin_v2 *self, bs_const_string client_id) {
+int Admin_remove_client(struct admin_v2 *self, const char * client_id) {
 	// TODO: Implement me :)
 	// (for Venskiy)
 
@@ -136,7 +136,7 @@ int Admin_remove_client(struct admin_v2 *self, bs_const_string client_id) {
 	return 0;
 }
 
-int Admin_update_client_info(struct admin_v2 *self, bs_const_string client_id, struct client_v2 *p_new_client) {
+int Admin_update_client_info(struct admin_v2 *self, const char * client_id, struct client_v2 *p_new_client) {
 	// TODO: Implement me :)
 	// (for Venskiy)
 
@@ -144,7 +144,7 @@ int Admin_update_client_info(struct admin_v2 *self, bs_const_string client_id, s
 	return 0;
 }
 
-int Admin_create_account(struct admin_v2 *self, bs_const_string clietn_id, enum AccountType account_type) {
+int Admin_create_account(struct admin_v2 *self, const char * clietn_id, enum AccountType account_type) {
 	// TODO: Implement me :)
 	// (for Venskiy)
 
@@ -152,7 +152,7 @@ int Admin_create_account(struct admin_v2 *self, bs_const_string clietn_id, enum 
 	return 0;
 }
 
-int Admin_change_account_type(struct admin_v2 *self, bs_const_string client_id, int account_id, enum AccountType account_type) {
+int Admin_change_account_type(struct admin_v2 *self, const char * client_id, int account_id, enum AccountType account_type) {
 	// TODO: Implement me :)
 	// (for Venskiy)
 

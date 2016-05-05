@@ -5,17 +5,17 @@
 
 void * User_alloc();
 void * User_static_alloc(struct user_v2 *self);
-void * user_init_with_system_and_username(struct user_v2 *self, banking_system bs, bs_const_string z_username);
+void * user_init_with_system_and_username(struct user_v2 *self, banking_system bs, const char * z_username);
 void user_release(struct user_v2 *self);
 
 boolean user_is_authorized(struct user_v2 *self);
-boolean user_authorize(struct user_v2 *self, bs_const_string z_username);
-bs_const_string user_get_username(struct user_v2 *self);
+boolean user_authorize(struct user_v2 *self, const char * z_username);
+const char * user_get_username(struct user_v2 *self);
 
 struct user_v2_private {
 	boolean is_dynamic;
 	boolean b_authorized;
-	bs_string z_username;
+	char * z_username;
 };
 
 struct bs_class_struct_v2 User_v2 = {
@@ -57,11 +57,11 @@ void * User_static_alloc(struct user_v2 *self) {
 	return self;
 }
 
-void * user_init_with_system_and_username(struct user_v2 *self, banking_system bs, bs_const_string z_username) {
+void * user_init_with_system_and_username(struct user_v2 *self, banking_system bs, const char * z_username) {
 	method_invoke(super, init_with_system, bs);
 
 	__ b_authorized = NO;
-	__ z_username = bs_calloc(bs_strlen(z_username) + 1, sizeof(bs_char));
+	__ z_username = bs_calloc(bs_strlen(z_username) + 1, sizeof(char));
 	bs_strcpy(__ z_username, z_username);
 
 	return self;
@@ -93,7 +93,7 @@ int cmp_password_callback(struct cmp_password_callback_params *params,
 	return 0;
 }
 
-boolean user_authorize(struct user_v2 *self, bs_const_string z_password) {
+boolean user_authorize(struct user_v2 *self, const char * z_password) {
 	ASSERT(self != Nil);
 	LOG("Trying to authorize %s...\n", __ z_username);
 
@@ -127,6 +127,6 @@ boolean user_authorize(struct user_v2 *self, bs_const_string z_password) {
 	return NO;
 }
 
-bs_const_string user_get_username(struct user_v2 *self) {
+const char * user_get_username(struct user_v2 *self) {
 	return __ z_username;
 }

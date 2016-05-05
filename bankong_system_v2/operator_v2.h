@@ -12,11 +12,11 @@ struct operator_v2_vars {
 };
 
 struct operator_v2_methods {
-	ctor(_with_system_and_username, banking_system bs, bs_const_string z_username);
+	ctor(_with_system_and_username, banking_system bs, const char * z_username);
 	dtor();
-	method(int, debit, bs_const_string client_id, int account_id, double sum);
-	method(int, credit, bs_const_string client_id, int account_id, double sum);
-	method(int, transfer, bs_const_string client_id, int account_from_id, int account_to_id, double sum);
+	method(int, debit, const char * client_id, int account_id, double sum);
+	method(int, credit, const char * client_id, int account_id, double sum);
+	method(int, transfer, const char * client_id, int account_from_id, int account_to_id, double sum);
 };
 
 struct operator_v2 {

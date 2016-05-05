@@ -12,14 +12,14 @@ struct admin_v2_vars {
 };
 
 struct admin_v2_methods {
-	ctor(_with_system_and_username, banking_system bs, bs_const_string z_username);
+	ctor(_with_system_and_username, banking_system bs, const char * z_username);
 	dtor();
 	method(int, add_client, struct client_v2 *p_client);
-	method(int, remove_client, bs_const_string client_id);
-	method(int, update_client_info, bs_const_string client_id, struct client_v2 *p_new_client);
-	method(int, create_account, bs_const_string client_id, enum AccountType account_type);
-	method(int, change_account_type, bs_const_string client_id, int account_number, enum AccountType account_type);
-	method(int, close_account, bs_const_string client_id, int account_number);
+	method(int, remove_client, const char * client_id);
+	method(int, update_client_info, const char * client_id, struct client_v2 *p_new_client);
+	method(int, create_account, const char * client_id, enum AccountType account_type);
+	method(int, change_account_type, const char * client_id, int account_number, enum AccountType account_type);
+	method(int, close_account, const char * client_id, int account_number);
 };
 
 struct admin_v2 {

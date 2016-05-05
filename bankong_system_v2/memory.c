@@ -59,16 +59,16 @@ void bs_free(void *memory) {
 	free(memory_block);
 }
 
-int bs_strlen(bs_const_string string) {
+int bs_strlen(const char * string) {
 	return strlen(string);
 }
 
-char *bs_strcpy(bs_string dst, bs_const_string src) {
+char *bs_strcpy(char * dst, const char * src) {
 	return strcpy(dst, src);
 }
 
-char * bs_to_lower_case(bs_string str) {
-	bs_char *c = str;
+char * bs_to_lower_case(char * str) {
+	char *c = str;
 
 	while ('\0' != *c) {
 		*c |= 32;

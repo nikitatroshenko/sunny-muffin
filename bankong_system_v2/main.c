@@ -6,7 +6,7 @@
 #include "System.h"
 
 extern int get_allocated_memory_size();
-bs_string read_line(bs_string buf, size_t max_count, FILE *in);
+char * read_line(char * buf, size_t max_count, FILE *in);
 
 void login(banking_system bs, struct user_v2 **p_usr);
 void authentificate(banking_system bs, struct user_v2 **p_usr);
@@ -22,7 +22,7 @@ void main_cycle(struct user_v2 *usr, banking_system bs);
 
 #define clear_screen() system("cls")
 
-bs_char _get_c(){
+char _get_c(){
 	fflush(stdin);
 	printf("$ ");
 	return getchar();
@@ -72,9 +72,9 @@ int main() {
 	return EXIT_SUCCESS;
 }
 
-bs_string read_line(bs_string buf, size_t max_cnt, FILE *in) {
+char * read_line(char * buf, size_t max_cnt, FILE *in) {
 	ASSERT(buf);
-	bs_char *c;
+	char *c;
 
 	do {
 		fflush(stdin);
@@ -105,8 +105,8 @@ void login(banking_system bs, struct user_v2 **p_usr) {
 }
 
 void authentificate(banking_system bs, struct user_v2 **p_usr) {
-	bs_char login[MAX_LOGIN_LEN];
-	bs_char c_retry;
+	char login[MAX_LOGIN_LEN];
+	char c_retry;
 
 	clear_screen();
 	do {
@@ -125,8 +125,8 @@ void authentificate(banking_system bs, struct user_v2 **p_usr) {
 }
 
 void authorize(banking_system bs, struct user_v2 *usr) {
-	bs_char z_password[MAX_LOGIN_LEN];
-	bs_char c_retry;
+	char z_password[MAX_LOGIN_LEN];
+	char c_retry;
 
 	clear_screen();
 	do {
@@ -156,7 +156,7 @@ void change_account_type(struct user_v2 *usr, banking_system bs);
 void close_account(struct user_v2 *usr, banking_system bs);
 
 void main_cycle(struct user_v2 *usr, banking_system bs) {
-	bs_char c_choice;
+	char c_choice;
 	int operation_idx;
 	operation call_operation[] = {
 		debit,
@@ -198,7 +198,7 @@ void main_cycle(struct user_v2 *usr, banking_system bs) {
 }
 
 void debit(struct user_v2 *usr, banking_system bs) {
-	bs_char client_id[MAX_LOGIN_LEN];
+	char client_id[MAX_LOGIN_LEN];
 	int account_id = 0;
 	double sum = -1;
 	int rc;
@@ -226,7 +226,7 @@ void debit(struct user_v2 *usr, banking_system bs) {
 }
 
 void credit(struct user_v2 *usr, banking_system bs) {
-	bs_char client_id[MAX_LOGIN_LEN];
+	char client_id[MAX_LOGIN_LEN];
 	int account_id = 0;
 	double sum = -1;
 	int rc;
