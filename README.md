@@ -1,14 +1,14 @@
 # sunny-muffin
 Repository contains all files of a banking system
 
-operator_v2.c:
+#### operator_v2.c:
 
 @tsapa44
 - [ ] `Operator_credit()`
 - [x] `Operator_debit()`
 - [ ] `Operator_transfer()`
 
-admin_v2.c:
+#### admin_v2.c:
 
  @Venskiy
 - [ ] `Admin_add_client()`
