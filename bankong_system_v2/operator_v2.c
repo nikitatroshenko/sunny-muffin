@@ -10,7 +10,7 @@ void Operator_release(struct operator_v2 *self);
 
 int Operator_debit(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum);
 int Operator_credit(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum);
-int Operator_transfer(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum);
+int Operator_transfer(struct operator_v2 *self, bs_const_string client_id, int account_from_id, int account_to_id, double sum);
 
 struct bs_class_struct_v2 Operator_v2 = {
 	.alloc = Operator_alloc,
@@ -140,7 +140,8 @@ int Operator_credit(struct operator_v2 *self, bs_const_string client_id, int acc
 }
 
 // Transfers sum from one specified account to another. Client id is used to make sure operation is legal.
-int Operator_transfer(struct operator_v2 *self, bs_const_string client_id, int account_id, double sum) {
+// Destination account can belong not only to client specified by client_id.
+int Operator_transfer(struct operator_v2 *self, bs_const_string client_id, int account_from_id, int account_to_id, double sum) {
 	// TODO: Implement me :)
 	// (for Tsapliuk)
 
