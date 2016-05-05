@@ -14,6 +14,7 @@ Repository contains all files of a banking system
 - [ ] `Admin_add_client()`
 - [ ] `Admin_remove_client()`
 - [ ] `Admin_update_client_info()`
+
 @nikitatroshenko
 - [ ] `Admin_create_account()`
 - [ ] `Admin_close_account()`
