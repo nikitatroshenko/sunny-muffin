@@ -10,6 +10,7 @@ void user_release(struct user_v2 *self);
 
 boolean user_is_authorized(struct user_v2 *self);
 boolean user_authorize(struct user_v2 *self, const char * z_username);
+void user_logout(struct user_v2 *self);
 const char * user_get_username(struct user_v2 *self);
 
 struct user_v2_private {
@@ -27,7 +28,7 @@ struct bs_class_struct_v2 User_v2 = {
 };
 
 #define super ((struct bs_object_v2 *)self)
-#define __ ((struct user_v2_private *)self->vars.private)->
+#define __ (self->vars.private)->
 
 void * User_alloc() {
 	struct user_v2 *self = bs_calloc(1, sizeof(struct user_v2));
@@ -44,11 +45,13 @@ void * User_static_alloc(struct user_v2 *self) {
 
 	((struct bs_object_v2 *)self)->class = User_v2.class;
 	((struct bs_object_v2 *)self)->virtual_methods.release = user_release;
+	self->virtual_methods.init_with_system_and_username = user_init_with_system_and_username;
 
 	self->methods.init_with_system_and_username = user_init_with_system_and_username;
 	self->methods.release = user_release;
 
 	self->methods.authorize = user_authorize;
+	self->methods.logout = user_logout;
 	self->methods.get_username = user_get_username;
 	self->methods.is_authorized = user_is_authorized;
 	self->vars.private = bs_calloc(1, sizeof(struct user_v2_private));
@@ -125,6 +128,10 @@ boolean user_authorize(struct user_v2 *self, const char * z_password) {
 	system_set_errcode(BS_ERR_DATABASE, property_get(super, system));
 
 	return NO;
+}
+
+void user_logout(struct user_v2 *self) {
+	__ b_authorized = NO;
 }
 
 const char * user_get_username(struct user_v2 *self) {

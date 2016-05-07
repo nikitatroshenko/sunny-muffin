@@ -5,7 +5,7 @@
 #include "operator_v2.h"
 #include "admin_v2.h"
 
-#define BS_PROPS_CNT 7
+#define BS_PROPS_CNT 8
 #define BS_PROP_IDX_MASK 0x10
 
 struct _banking_system {
@@ -14,27 +14,30 @@ struct _banking_system {
 	int err_code;
 };
 
-int load_config(banking_system system, int n_cols, char *field_vals[], char *field_headers[]) {
-	static int record_idx;
+struct load_config_params {
+	banking_system bs;
+	int rec_idx;
+};
 
-	system_set_errcode((int) &record_idx, system); // To be able to zero record_idx when loading finishes.
-
-	if ((BS_PROPS_CNT < record_idx) || (1 > n_cols)) {
-		system_set_errcode(BS_ERR_CFG_LOAD_FAILED, system);
+int load_config_callback(struct load_config_params *params, int n_cols, char *field_vals[], char *field_headers[]) {
+	if ((BS_PROPS_CNT <= params->rec_idx) || (1 > n_cols)) {
+		system_set_errcode(BS_ERR_CFG_LOAD_FAILED, params->bs);
 
 		return BS_ERR_CFG_LOAD_FAILED; // That will cause load breaking with return code SQLITE_ABORT.
 	}
 
-	system->cfg_properties[record_idx] = bs_calloc(bs_strlen(field_vals[0]), sizeof(char));
-	bs_strcpy(system->cfg_properties[record_idx], field_vals[0]);
+	params->bs->cfg_properties[params->rec_idx] = bs_calloc(bs_strlen(field_vals[0]) + 1, sizeof(char));
+	bs_strcpy(params->bs->cfg_properties[params->rec_idx], field_vals[0]);
+	params->rec_idx++;
 
 	return BS_OK;
 }
 
 int system_init(const char *z_database_filename, banking_system *p_bs) {
+	LOG("Initializing the system...\n");
+
 	int rc;
 
-	LOG("Initializing the system...\n");
 	*p_bs = bs_calloc(1, sizeof(struct _banking_system));
 	ASSERT(*p_bs != Nil);
 	rc = sqlite3_open_v2(z_database_filename, &(*p_bs)->db_sqlite3, SQLITE_OPEN_READWRITE, NULL);
@@ -47,23 +50,25 @@ int system_init(const char *z_database_filename, banking_system *p_bs) {
 
 		return BS_ERR_DATABASE;
 	}
-
-	rc = sqlite3_exec((*p_bs)->db_sqlite3, "SELECT value FROM BANK_CONFIG;", load_config, *p_bs, Nil);
 	
-	if (rc) {
-		if (rc == SQLITE_ABORT) {
-			system_set_errcode(BS_ERR_CFG_LOAD_FAILED, *p_bs);
-			rc = BS_ERR_CFG_LOAD_FAILED;
-		} else {
-			system_set_errcode(BS_ERR_DATABASE, *p_bs);
-			rc = BS_ERR_DATABASE;
-		}
+	struct load_config_params params = {
+			.bs = *p_bs,
+			.rec_idx = 0
+	};
 
-		sqlite3_close_v2((*p_bs)->db_sqlite3);
-		LOG("Failed.\n");
-	}
+	rc = sqlite3_exec((*p_bs)->db_sqlite3,
+		"SELECT value FROM BANK_CONFIG;",
+		load_config_callback,
+		&params,
+		Nil);
 
-	return BS_OK;
+	rc = (rc == SQLITE_OK) ? BS_OK :
+		     (rc == SQLITE_ABORT) ? BS_ERR_CFG_LOAD_FAILED : BS_ERR_DATABASE;
+	
+	system_set_errcode(rc, *p_bs);
+	LOG((rc == BS_OK) ? "Failed.\n" : "Succeed.\n");
+
+	return rc;
 }
 
 int system_get_errcode(banking_system bs) {
@@ -74,16 +79,18 @@ int system_get_errcode(banking_system bs) {
 
 const char * system_get_errmsg(banking_system system) {
 	static const char *error_names[] = {
-		/* BS_OK							*/ "success",
-		/* BS_ERR_USER_LOGIN				*/ "incorrect user login",
-		/* BS_ERR_USER_PASSWORD				*/ "incorrect user password",
-		/* BS_ERR_DATABASE					*/ "database defined error",
-		/* BS_ERR_CLIENT_ID					*/ "incorrect client id",
-		/* BS_ERR_ACCOUNT_ID				*/ "incorrect account id",
-		/* BS_ERR_USER_UNAUTHORIZED			*/ "user is not authorized",
-		/* BS_ERR_OVERDRAFT_LIMIT_EXCEEDED	*/ "overdraft limit cannot be exceeded",
-		/* BS_ERR_CFG_LOAD_FAILED			*/ "could not load configuration properies",
-		/* BS_ERR_INVALID_ARG				*/ "invalid argument passed to system function"
+		[BS_OK							] = "success",
+		[BS_ERR_USER_LOGIN				] = "incorrect user login",
+		[BS_ERR_USER_PASSWORD			] = "incorrect user password",
+		[BS_ERR_DATABASE				] = "database defined error",
+		[BS_ERR_CLIENT_ID				] = "incorrect client id",
+		[BS_ERR_ACCOUNT_ID				] = "incorrect account id",
+		[BS_ERR_USER_UNAUTHORIZED		] = "user is not authorized",
+		[BS_ERR_OVERDRAFT_LIMIT_EXCEEDED] = "overdraft limit cannot be exceeded",
+		[BS_ERR_CFG_LOAD_FAILED			] = "could not load configuration properies",
+		[BS_ERR_INVALID_ARG				] = "invalid argument passed to system function",
+		[BS_ERR_ACCOUNT_TYPE			] = "can not change account to this type",
+		[BS_ERR_ACCOUNTS_EXIST			] = "can not delete client as he has unclosed accounts"
 	};
 
 	ASSERT(system != Nil);
@@ -135,9 +142,9 @@ struct user_v2 * system_authentificate(banking_system system, const char *z_user
 	if (rc == SQLITE_OK) {
 		system_set_errcode(BS_OK, system);
 
-		if (!strcmp(params.username, "ADMIN")) {
+		if (bs_strcmp(params.username, "ADMIN", YES)) {
 			usr = Admin_v2.alloc();
-		} else if (!strcmp(params.username, "OPERATOR")) {
+		} else if (bs_strcmp(params.username, "OPERATOR", YES)) {
 			usr = Operator_v2.alloc();
 		} else {
 			system_set_errcode(BS_ERR_USER_LOGIN, system);
@@ -152,7 +159,7 @@ struct user_v2 * system_authentificate(banking_system system, const char *z_user
 		return Nil;
 	}
 
-	method_invoke(usr, init_with_system_and_username, system, z_username);
+	virtual_method_invoke(usr, init_with_system_and_username, system, z_username);
 
 	return usr;
 }
@@ -173,4 +180,92 @@ void system_finalize(banking_system system) {
 	}
 	sqlite3_close_v2(system->db_sqlite3);
 	bs_free(system);
+}
+
+struct callback_params_account_number_and_balance {
+	double balance;
+	int account_number;
+	banking_system bs;
+};
+
+int fetch_account_number_and_balance(void *, int, char **, char **);
+
+void system_month_processing(banking_system system) {
+	ASSERT(system != Nil);
+	char z_sql[150];
+	int rc;
+	struct callback_params_account_number_and_balance params;
+	time_t current_time_seconds = time(Nil);
+	struct tm* time_info = localtime(&current_time_seconds);
+	int current_day_in_month = time_info->tm_mday;
+
+	params.bs = system;
+
+	if (current_day_in_month == 1) {
+		sprintf(z_sql, "SELECT account_number, balance FROM BANK_ACCOUNTS WHERE balance < 0 AND type like 'Overdraft';");
+		rc = sqlite3_exec(system->db_sqlite3, z_sql, fetch_account_number_and_balance, &params, Nil);
+		if (rc == SQLITE_OK) {
+			system_set_errcode(BS_OK, system);
+		}
+		else {
+			system_set_errcode(BS_ERR_DATABASE, system);
+			LOG("Failed.\n");
+			return;
+		}
+
+		sprintf(z_sql, "UPDATE BANK_ACCOUNTS SET balance = %lf WHERE account_number = '%d';",
+			params.balance - atoi(system_get_property(system, BS_PROP_OVERDRAFT_FINE)), params.account_number);
+		rc = sqlite3_exec(system->db_sqlite3, z_sql, Nil, Nil, Nil);
+
+		if (rc == SQLITE_OK) {
+			system_set_errcode(BS_OK, system);
+		}
+		else {
+			system_set_errcode(BS_ERR_DATABASE, system);
+			LOG("Failed.\n");
+			return;
+		}
+
+
+		sprintf(z_sql, "SELECT account_number, balance FROM BANK_ACCOUNTS WHERE type like 'SAVING';");
+		rc = sqlite3_exec(system->db_sqlite3, z_sql, fetch_account_number_and_balance, &params, Nil);
+		if (rc == SQLITE_OK) {
+			system_set_errcode(BS_OK, system);
+		}
+		else {
+			system_set_errcode(BS_ERR_DATABASE, system);
+			LOG("Failed.\n");
+			return;
+		}
+
+		sprintf(z_sql, "UPDATE BANK_ACCOUNTS SET balance = %lf WHERE account_number = '%d';",
+			params.balance + strtod(system_get_property(system, BS_PROP_SAVING_INTEREST_RATE), Nil) * params.balance
+			, params.account_number);
+		rc = sqlite3_exec(system->db_sqlite3, z_sql, Nil, Nil, Nil);
+
+		if (rc == SQLITE_OK) {
+			system_set_errcode(BS_OK, system);
+		}
+		else {
+			system_set_errcode(BS_ERR_DATABASE, system);
+			LOG("Failed.\n");
+			return;
+		}
+
+	}
+
+
+	return;
+}
+
+int fetch_account_number_and_balance(struct callback_params_account_number_and_balance *data, int n_coals, char*field_names[], char *col_names[]) {
+	if (n_coals != 0) {
+		data->account_number = atoi(field_names[0]);
+		data->balance = strtod(field_names[1], Nil);
+	}
+	else {
+		system_set_errcode(BS_ERR_USER_LOGIN, data->bs);
+	}
+
+	return 0;
 }

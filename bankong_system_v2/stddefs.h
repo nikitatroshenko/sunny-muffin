@@ -12,6 +12,9 @@ typedef int boolean;
 #include <stdio.h>
 #define LOG(...) fprintf(stderr, __VA_ARGS__)
 #define ASSERT(expression) assert(expression)
+#else
+#define LOG(...)
+#define ASSERT(expression)
 #endif // NDEBUG
 
 
@@ -19,6 +22,7 @@ typedef int boolean;
 #define _countof(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif
 
+boolean bs_strcmp(const char *str1, const char *str2, boolean ignore_case);
 
 boolean bs_memory_equals(const void *buf1, const void *buf2, size_t size);
 

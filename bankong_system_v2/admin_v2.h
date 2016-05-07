@@ -3,6 +3,7 @@
 
 #include "client_v2.h"
 #include "user_v2.h"
+#include "Account.h"
 
 struct admin_v2;
 
@@ -17,7 +18,7 @@ struct admin_v2_methods {
 	method(int, add_client, struct client_v2 *p_client);
 	method(int, remove_client, const char * client_id);
 	method(int, update_client_info, const char * client_id, struct client_v2 *p_new_client);
-	method(int, create_account, const char * client_id, enum AccountType account_type);
+	method(int, create_account, struct Account * p_account);
 	method(int, change_account_type, const char * client_id, int account_number, enum AccountType account_type);
 	method(int, close_account, const char * client_id, int account_number);
 };

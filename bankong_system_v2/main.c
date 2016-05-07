@@ -154,40 +154,57 @@ void update_client_info(struct user_v2 *usr, banking_system bs);
 void create_account(struct user_v2 *usr, banking_system bs);
 void change_account_type(struct user_v2 *usr, banking_system bs);
 void close_account(struct user_v2 *usr, banking_system bs);
+void logout(struct user_v2 *usr, banking_system bs);
 
 void main_cycle(struct user_v2 *usr, banking_system bs) {
 	char c_choice;
 	int operation_idx;
 	operation call_operation[] = {
-		debit,
 		credit,
+		debit,
 		add_client,
 		remove_client,
 		update_client_info,
 		create_account,
 		change_account_type,
-		close_account
+		close_account,
+		logout
 	};
 
 	do {
 		clear_screen();
-		printf("%s : %s\n"\
-			"======== MAIN MENU ========\n"\
-			"1.\tCredit;\n"\
-			"2.\tDebit;\n"\
-			"3.\tAdd client;\n"\
-			"4.\tRemove client;\n"\
-			"5.\tUpdate client info;\n"\
-			"6.\tCreate new account;\n"\
-			"7.\tChange account type;\n"\
-			"8.\tClose account;\n"\
+		printf("%s : %s\n"
+			"======== MAIN MENU ========\n"	
+			"1.\tCredit;\n"					
+			"2.\tDebit;\n"					
+			"3.\tAdd client;\n"				
+			"4.\tRemove client;\n"			
+			"5.\tUpdate client info;\n"		
+			"6.\tCreate new account;\n"		
+			"7.\tChange account type;\n"	
+			"8.\tClose account;\n"			
+			"9.\tLogout;\n"					
 			"0.\tExit.\n",
 			method_invoke(usr, get_username), typeof(usr)->string_val);
 
 		c_choice = _get_c();
 		operation_idx = c_choice - '1';
 
-		if (-1 == operation_idx) break;
+		if (-1 == operation_idx) {
+			method_invoke(usr, logout);
+			break;
+		}
+
+		if (c_choice == '9') {
+			delete(usr);
+			usr = Nil;
+			clear_screen();
+			printf("Logged out. Press enter ... ");
+			_get_c();
+			login(bs, &usr);
+			if (usr == Nil) break;
+			continue;
+		}
 
 		if (operation_idx < _countof(call_operation) && operation_idx >= 0) {
 			call_operation[operation_idx](usr, bs);
@@ -211,14 +228,19 @@ void debit(struct user_v2 *usr, banking_system bs) {
 
 	printf("Enter client's id:\n");
 	read_line(client_id, MAX_LOGIN_LEN, stdin);
+
+	do{
+		printf("Enter number of account:\n");
+	} while (1 != scanf("%d", &account_id));
+
 	do{
 		printf("Enter sum of transaction:\n$ ");
 	} while (1 != scanf("%lf", &sum));
 
-	rc = method_invoke((struct operator_v2 *)usr, debit, client_id, account_id, sum);
+	rc = method_invoke((struct operator_v2 *)usr, debit, client_id, account_id, &sum);
 
 	if (rc == BS_OK) {
-		printf("Successfully added %.2lf$ to the account %d\n", sum, account_id);
+		printf("Successfully withdrew %.2lf$ to the account %d\n", sum, account_id);
 		return;
 	}
 
@@ -249,10 +271,10 @@ void credit(struct user_v2 *usr, banking_system bs) {
 		printf("Enter sum of transaction:\n");
 	} while (1 != scanf("%lf", &sum));
 
-	rc = method_invoke((struct operator_v2 *)usr, debit, client_id, account_id, sum);
+	rc = method_invoke((struct operator_v2 *)usr, credit, client_id, account_id, &sum);
 
 	if (rc == BS_OK) {
-		printf("Successfully added %.2lf$ to the account %d", sum, account_id);
+		printf("Successfully added %.2lf$ to the account %d\n", sum, account_id);
 		return;
 	}
 
@@ -295,27 +317,172 @@ void add_client(struct user_v2 *usr, banking_system bs) {
 
 	rc = method_invoke((struct admin_v2 *)usr, add_client, &new_client);
 
-	if (rc == BS_OK) return;
+	if (rc == BS_OK) {
+		printf("successfully added client.\n");
+		return;
+	}
 
 	printf("Adding client is failed: %s.\n", system_get_errmsg(bs));
 }
 
 void remove_client(struct user_v2 *usr, banking_system bs) {
-	method_invoke((struct admin_v2 *)usr, remove_client, Nil);
+	int rc;
+	char client_id[MAX_LOGIN_LEN];
+
+	clear_screen();
+	if (!method_invoke((struct bs_object_v2 *)usr, is_a, Admin_v2)) {
+		printf("You have no permission to do that.\n");
+		return;
+	}
+	fflush(stdin);
+
+	printf("Enter client's id:\n");
+	read_line(client_id, MAX_LOGIN_LEN, stdin);
+
+	rc = method_invoke((struct admin_v2 *)usr, remove_client, client_id);
+
+	if (rc == BS_OK) {
+		printf("Successfully deleted client.\n");
+		return;
+	}
+
+	printf("Removing client is failed: %s.\n", system_get_errmsg(bs));
 }
 
 void update_client_info(struct user_v2 *usr, banking_system bs) {
-	method_invoke((struct admin_v2 *)usr, update_client_info, Nil, Nil);
+	struct client_v2 new_client;
+	int rc;
+
+	clear_screen();
+	if (!method_invoke((struct bs_object_v2 *)usr, is_a, Admin_v2)) {
+		printf("You have no permission to do that.\n");
+		return;
+	}
+	fflush(stdin);
+
+	printf("Enter client's id:\n");
+	read_line(new_client.id, MAX_LOGIN_LEN, stdin);
+
+	printf("Enter new name:\n");
+	read_line(new_client.z_name, 50, stdin);
+
+	printf("Is %s an individual? [y/n] ", new_client.z_name);
+
+	do {
+		new_client.is_individual = _get_c();
+	} while (new_client.is_individual != 'y' && new_client.is_individual != 'n');
+
+	printf("Enter %s's new address:\n", new_client.z_name);
+	read_line(new_client.address, 40, stdin);
+
+	rc = method_invoke((struct admin_v2 *)usr, update_client_info, new_client.z_name, &new_client);
+
+	if (rc == BS_OK) {
+		printf("Successfully updated client info.");
+		return;
+	}
+
+	printf("Updating client's info is failed: %s.\n", system_get_errmsg(bs));
 }
 
 void create_account(struct user_v2 *usr, banking_system bs) {
-	method_invoke((struct admin_v2 *)usr, create_account, Nil, 0);
+	struct Account account;
+	int rc;
+	char z_client_id[MAX_LOGIN_LEN];
+	char z_acc_type[12];
+
+	clear_screen();
+	if (!method_invoke((struct bs_object_v2 *)usr, is_a, Admin_v2)) {
+		printf("You have no permission to do that.\n");
+		return;
+	}
+	fflush(stdin);
+
+	printf("Enter client id:\n");
+	read_line(z_client_id, MAX_LOGIN_LEN, stdin);
+
+	printf("Enter account type:\n");
+	read_line(z_acc_type, 12, stdin);
+	account.account_type = parse_account_type(z_acc_type);
+	account.client_id = z_client_id;
+
+	rc = method_invoke((struct admin_v2 *)usr, create_account, &account);
+
+	if (rc == BS_OK) {
+		printf("Successfully created account %d.", account.number);
+		return;
+	}
+
+	printf("Creating account is failed: %s.\n", system_get_errmsg(bs));
 }
 
 void change_account_type(struct user_v2 *usr, banking_system bs) {
-	method_invoke((struct admin_v2 *)usr, change_account_type, Nil, 0, 0);
+	int rc;
+	int account_id = 0;
+	char z_client_id[MAX_LOGIN_LEN];
+	char z_acc_type[12];
+	enum AccountType account_type = DEFAULT;
+
+	clear_screen();
+	if (!method_invoke((struct bs_object_v2 *)usr, is_a, Admin_v2)) {
+		printf("You have no permission to do that.\n");
+		return;
+	}
+	fflush(stdin);
+
+	printf("Enter client's id:\n");
+	read_line(z_client_id, MAX_LOGIN_LEN, stdin);
+
+	do{
+		printf("Enter number of account:\n");
+	} while (1 != scanf("%d", &account_id));
+
+	printf("Enter account type:\n");
+	read_line(z_acc_type, 12, stdin);
+	account_type = parse_account_type(z_acc_type);
+
+	rc = method_invoke((struct admin_v2 *)usr, change_account_type, z_client_id, account_id, account_type);
+
+	if (rc == BS_OK) {
+		printf("Successfully changed account type.\n");
+		return;
+	}
+
+	printf("Updating client's info is failed: %s.\n", system_get_errmsg(bs));
 }
 
 void close_account(struct user_v2 *usr, banking_system bs) {
-	method_invoke((struct admin_v2 *)usr, close_account, Nil, 0);
+	int rc;
+	int account_id = 0;
+	char z_client_id[MAX_LOGIN_LEN];
+	char z_acc_type[12];
+	enum AccountType account_type = DEFAULT;
+
+	clear_screen();
+	if (!method_invoke((struct bs_object_v2 *)usr, is_a, Admin_v2)) {
+		printf("You have no permission to do that.\n");
+		return;
+	}
+	fflush(stdin);
+
+	printf("Enter client's id:\n");
+	read_line(z_client_id, MAX_LOGIN_LEN, stdin);
+
+	do{
+		printf("Enter number of account:\n");
+	} while (1 != scanf("%d", &account_id));
+
+	rc = method_invoke((struct admin_v2 *)usr, close_account, z_client_id, account_id);
+
+	if (rc == BS_OK) {
+		printf("Successfully removed account.\n");
+		return;
+	}
+
+	printf("Closing account's info is failed: %s.\n", system_get_errmsg(bs));
+}
+
+void logout(struct user_v2 *usr, banking_system bs) {
+	LOG("Logging %s out ...", method_invoke(usr, get_username));
+	method_invoke(usr, logout);
 }

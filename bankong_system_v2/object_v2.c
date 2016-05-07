@@ -37,6 +37,7 @@ void * BSObject_v2_static_alloc(struct bs_object_v2 *self) {
 	
 	self->class = BSObject_v2.class;
 	self->virtual_methods.release = bs_object_v2_release;
+	self->virtual_methods.init_with_system = bs_object_v2_init;
 	self->methods.init_with_system = bs_object_v2_init;
 	self->methods.release = bs_object_v2_release;
 	self->methods.is_a = bs_object_v2_instance_of;

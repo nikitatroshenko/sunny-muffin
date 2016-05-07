@@ -15,6 +15,8 @@ typedef struct sqlite3 sqlite3;
 #define BS_ERR_OVERDRAFT_LIMIT_EXCEEDED	0x07
 #define BS_ERR_CFG_LOAD_FAILED			0x08
 #define BS_ERR_INVALID_ARG				0x09
+#define BS_ERR_ACCOUNT_TYPE				0x0A
+#define BS_ERR_ACCOUNTS_EXIST			0x0B
 
 #define BS_PROP_SAVING_INTEREST_RATE	0x10
 #define BS_PROP_OVERDRAFT_INTEREST_RATE	0x11
@@ -23,6 +25,7 @@ typedef struct sqlite3 sqlite3;
 #define BS_PROP_OVERDRAFT_TERM			0x14
 #define BS_PROP_OVERDRAFT_LIMIT			0x15
 #define BS_PROP_OVERDRAFT_FINE			0x16
+#define BS_PROP_PER_TRANSACTION_FEE		0x17
 
 int system_init(const char *z_database_filename, banking_system *p_system);
 

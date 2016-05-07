@@ -46,7 +46,8 @@ struct bs_object_v2_methods {
 };
 
 struct bs_object_v2_virtual_methods {
-	dtor();	
+	ctor(_with_system, banking_system bs);
+	dtor();
 };
 
 struct bs_object_v2 {

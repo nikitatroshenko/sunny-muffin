@@ -4,14 +4,6 @@
 
 static size_t gs_allocated_memory_size = 0;
 
-boolean bs_memory_equals(const void *buf1, const void *buf2, size_t size) {
-	return !memcmp(buf1, buf2, size);
-}
-
-void *bs_memory_copy(void *dest_buf, const void *src_buf, size_t size) {
-	return memcpy(dest_buf, src_buf, size);
-}
-
 void *bs_malloc(size_t size) {
 	size_t *memory_block = malloc(size + sizeof(size_t));
 
@@ -57,25 +49,6 @@ void bs_free(void *memory) {
 
 	LOG("Deallocating block of %d bytes.\n", memory_block[0]);
 	free(memory_block);
-}
-
-int bs_strlen(const char * string) {
-	return strlen(string);
-}
-
-char *bs_strcpy(char * dst, const char * src) {
-	return strcpy(dst, src);
-}
-
-char * bs_to_lower_case(char * str) {
-	char *c = str;
-
-	while ('\0' != *c) {
-		*c |= 32;
-		c++;
-	}
-
-	return str;
 }
 
 int get_allocated_memory_size() {
